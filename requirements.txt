@@ -1,0 +1,10 @@
+# 메인 의존성 (mmsegmentation 위에서 동작)
+# Install mmsegmentation first: see INSTALL.md
+
+# Additional packages
+mmpretrain>=1.0.0           # ConvNeXt backbone
+opencv-python>=4.5
+numpy>=1.20
+prettytable>=3.0
+ftfy>=6.0
+regex

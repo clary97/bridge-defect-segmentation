@@ -1,0 +1,45 @@
+# Byte-compiled
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Training outputs
+work_dirs/
+checkpoints/
+output/
+logs_mask_gen/
+
+# Visualization
+vis_*/
+test_image/
+test_image_results/
+*_results.png
+*_compare.jpg
+
+# Large files
+*.pth
+*.pt
+*.log
+*.json
+!configs/**/*.json
+!summary.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Dataset (개인 경로)
+data/
+datasets/
