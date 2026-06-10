@@ -158,27 +158,43 @@ dacl10k v2 dev phase의 efflorescence 단일 카테고리 데이터.
 
 ## 7. 정성적 결과
 
-### ConvNeXt-B 샘플
-
 각 이미지는 `[원본] [GT] [예측]` 가로 배치 시각화.
 
-| 이미지 ID | 결과 |
-|---|---|
-| 0012 | ![](docs/images/convnext_b/dacl10k_v2_validation_0012_compare.jpg) |
-| 0152 | ![](docs/images/convnext_b/dacl10k_v2_validation_0152_compare.jpg) |
-| 0268 | ![](docs/images/convnext_b/dacl10k_v2_validation_0268_compare.jpg) |
-| 0453 | ![](docs/images/convnext_b/dacl10k_v2_validation_0453_compare.jpg) |
-| 0810 | ![](docs/images/convnext_b/dacl10k_v2_validation_0810_compare.jpg) |
+### ConvNeXt-B 샘플
+
+**Sample 0012**
+![ConvNeXt-B sample 0012](docs/images/convnext_b/dacl10k_v2_validation_0012_compare.jpg)
+
+**Sample 0152**
+![ConvNeXt-B sample 0152](docs/images/convnext_b/dacl10k_v2_validation_0152_compare.jpg)
+
+**Sample 0268**
+![ConvNeXt-B sample 0268](docs/images/convnext_b/dacl10k_v2_validation_0268_compare.jpg)
+
+**Sample 0453**
+![ConvNeXt-B sample 0453](docs/images/convnext_b/dacl10k_v2_validation_0453_compare.jpg)
+
+**Sample 0810**
+![ConvNeXt-B sample 0810](docs/images/convnext_b/dacl10k_v2_validation_0810_compare.jpg)
+
+---
 
 ### ConvNeXt-L 샘플
 
-| 이미지 ID | 결과 |
-|---|---|
-| 0012 | ![](docs/images/convnext_l/dacl10k_v2_validation_0012_compare.jpg) |
-| 0152 | ![](docs/images/convnext_l/dacl10k_v2_validation_0152_compare.jpg) |
-| 0268 | ![](docs/images/convnext_l/dacl10k_v2_validation_0268_compare.jpg) |
-| 0453 | ![](docs/images/convnext_l/dacl10k_v2_validation_0453_compare.jpg) |
-| 0810 | ![](docs/images/convnext_l/dacl10k_v2_validation_0810_compare.jpg) |
+**Sample 0012**
+![ConvNeXt-L sample 0012](docs/images/convnext_l/dacl10k_v2_validation_0012_compare.jpg)
+
+**Sample 0152**
+![ConvNeXt-L sample 0152](docs/images/convnext_l/dacl10k_v2_validation_0152_compare.jpg)
+
+**Sample 0268**
+![ConvNeXt-L sample 0268](docs/images/convnext_l/dacl10k_v2_validation_0268_compare.jpg)
+
+**Sample 0453**
+![ConvNeXt-L sample 0453](docs/images/convnext_l/dacl10k_v2_validation_0453_compare.jpg)
+
+**Sample 0810**
+![ConvNeXt-L sample 0810](docs/images/convnext_l/dacl10k_v2_validation_0810_compare.jpg)
 
 전체 206장 시각화 결과는 인퍼런스 스크립트로 재생성 가능 (아래 참고).
 
