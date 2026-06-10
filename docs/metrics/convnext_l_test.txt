@@ -1,0 +1,13 @@
+Config:     configs/convnext/convnext-large_upernet_40k_dacl-efflorescence-512x512.py
+Checkpoint: work_dirs/upernet_convnext-large_dacl_efflorescence/iter_20000.pth
+Images:     206
+
++---------------+-------+-------+-----------+--------+------+
+|     Class     |  IoU  |   F1  | Precision | Recall | FPR  |
++---------------+-------+-------+-----------+--------+------+
+|   background  | 94.73 | 97.29 |   96.05   | 98.58  |  -   |
+| Efflorescence | 51.51 | 67.99 |   80.35   | 58.93  | 1.42 |
++---------------+-------+-------+-----------+--------+------+
+
+mIoU: 73.12
+mF1:  82.64
