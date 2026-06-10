@@ -22,6 +22,9 @@ test_image/
 test_image_results/
 *_results.png
 *_compare.jpg
+# Exception: 레포트용 샘플 이미지는 포함
+!docs/images/**/*.jpg
+!docs/images/**/*.png
 
 # Large files
 *.pth
