@@ -1,4 +1,4 @@
-# Experiments: UPerNet + ConvNeXt (Efflorescence Segmentation)
+# Experiments: Efflorescence Segmentation
 
 dacl10k_v2_devphase 데이터셋의 **백태(Efflorescence)** 단일 클래스 segmentation 실험.
 
@@ -7,8 +7,8 @@ dacl10k_v2_devphase 데이터셋의 **백태(Efflorescence)** 단일 클래스 s
 | 항목 | 내용 |
 |---|---|
 | **Task** | Binary semantic segmentation (background vs Efflorescence) |
-| **Architecture** | UPerNet + ConvNeXt (B / L) |
-| **Framework** | mmsegmentation 1.2.2 + mmpretrain 1.2.0 |
+| **Architectures** | UPerNet + ConvNeXt (B / L), Mask2Former + Swin (B / L) |
+| **Framework** | mmsegmentation 1.2.2 + mmpretrain 1.2.0 + mmdet 3.3.0 |
 | **GPU** | NVIDIA RTX A5000 (24GB) |
 
 ---
@@ -278,12 +278,58 @@ python tools/inference_dacl_efflorescence.py \
 
 ---
 
+## 10. Mask2Former 추가 실험 (계획)
+
+ConvNeXt 외에 **Mask2Former + Swin Transformer (B/L)** 추가 실험을 위한 config 작성.
+
+### 설정 비교
+
+| 항목 | UPerNet + ConvNeXt | Mask2Former + Swin |
+|---|---|---|
+| Decoder | UPerNet (FPN-like) | Mask2Former (Transformer decoder, 9 layers) |
+| Loss | CrossEntropyLoss | CE + Dice + Mask (cls/mask/dice on 9 decoder outputs) |
+| Inference | Standard | Slide window |
+
+### 실측 자원 사용량
+
+| 모델 | batch_size | VRAM (peak) | iter당 시간 | 40K iter 예상 |
+|---|---|---|---|---|
+| Mask2Former + Swin-B | 2 | ~23.5 GB | 2.21 s | ~25시간 |
+| Mask2Former + Swin-L (with_cp) | 1 | ~21.3 GB | 3.05 s | ~34시간 |
+
+> Swin-L은 메모리 제약으로 `with_cp=True` (gradient checkpointing) 적용.
+> Mask2Former는 9개 decoder layer × 3개 loss로 매우 무거움 (ConvNeXt 대비 ~7배 느림).
+
+### 추가 의존성
+
+```bash
+# mmdet 설치 필요
+pip install mmdet
+# 그 후 __init__.py 수정 (mmcv 2.2.0 호환 허용)
+
+# mmcv는 우리 torch 환경(2.9.1+cu128)에 맞춰 source build 필요
+git clone -b v2.2.0 https://github.com/open-mmlab/mmcv.git
+cd mmcv
+MMCV_WITH_OPS=1 FORCE_CUDA=1 TORCH_CUDA_ARCH_LIST='8.6' pip install -e .
+```
+
+### 자동 트리거 학습 스크립트
+
+GPU 여유 생기면 Swin-B → Swin-L 순차 학습:
+```bash
+nohup bash tools/auto_train_mask2former.sh > logs_auto_train.log 2>&1 &
+```
+
+---
+
 ## 부록
 
 ### Config 파일 위치
 
 - ConvNeXt-B: [configs/convnext/convnext-base_upernet_40k_dacl-efflorescence-512x512.py](configs/convnext/convnext-base_upernet_40k_dacl-efflorescence-512x512.py)
 - ConvNeXt-L: [configs/convnext/convnext-large_upernet_40k_dacl-efflorescence-512x512.py](configs/convnext/convnext-large_upernet_40k_dacl-efflorescence-512x512.py)
+- Mask2Former + Swin-B: [configs/mask2former/mask2former_swin-b_40k_dacl-efflorescence-512x512.py](configs/mask2former/mask2former_swin-b_40k_dacl-efflorescence-512x512.py)
+- Mask2Former + Swin-L: [configs/mask2former/mask2former_swin-l_40k_dacl-efflorescence-512x512.py](configs/mask2former/mask2former_swin-l_40k_dacl-efflorescence-512x512.py)
 
 ### Dataset Config
 
@@ -294,3 +340,7 @@ python tools/inference_dacl_efflorescence.py \
 
 - [docs/metrics/convnext_b_test.txt](docs/metrics/convnext_b_test.txt)
 - [docs/metrics/convnext_l_test.txt](docs/metrics/convnext_l_test.txt)
+
+### Tools
+
+- [tools/auto_train_mask2former.sh](tools/auto_train_mask2former.sh) — GPU 여유 자동 감지 + 순차 학습
