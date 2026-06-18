@@ -7,7 +7,7 @@ _base_ = [
 
 crop_size = (512, 512)
 data_preprocessor = dict(size=crop_size)
-checkpoint_file = 'https://download.openmmlab.com/mmclassification/v0/convnext/downstream/convnext-large_3rdparty_in21k_20220301-e6e0ea0a.pth'  # noqa
+checkpoint_file = 'checkpoints/convnext-large_3rdparty_in21k_20220301-e6e0ea0a.pth'  # local
 
 # ConvNeXt-L + UPerNet, num_classes=2 for binary efflorescence
 model = dict(

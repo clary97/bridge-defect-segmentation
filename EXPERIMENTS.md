@@ -344,3 +344,126 @@ nohup bash tools/auto_train_mask2former.sh > logs_auto_train.log 2>&1 &
 ### Tools
 
 - [tools/auto_train_mask2former.sh](tools/auto_train_mask2former.sh) — GPU 여유 자동 감지 + 순차 학습
+- [tools/inference_dacl_efflorescence.py](tools/inference_dacl_efflorescence.py) — Inference + metric 계산
+- [tools/combine_dacl_s2ds.py](tools/combine_dacl_s2ds.py) — dacl + S2DS 데이터 통합 (symlink)
+- [tools/train_combined_convnext.sh](tools/train_combined_convnext.sh) — Combined 데이터셋으로 ConvNeXt-B/L 순차 학습
+
+---
+
+## 11. Mask2Former + InternImage-L 실험
+
+다른 워크스테이션에서 학습한 결과 통합.
+
+### 설정
+
+| 항목 | 값 |
+|---|---|
+| Backbone | InternImage-L (`with_cp=True`) |
+| Decoder | Mask2Former |
+| batch_size | 1 |
+| max_iters | 40,000 |
+| Best Iter | **16K** (가장 빠른 수렴) |
+
+### Test 결과 (dacl, 206장)
+
+| Class | IoU | F1 | Precision | Recall |
+|---|---|---|---|---|
+| background | 94.87 | 97.37 | 96.80 | 97.94 |
+| **Efflorescence** | **55.65** | **71.51** | **76.37** | **67.23** |
+
+- mIoU: **75.26**
+- mF1: **84.44**
+
+### 학습 효율
+
+- Best mIoU 도달이 16K iter로 다른 모델 대비 가장 빠름
+- VRAM 사용: ~7.7 GB (batch=1, with_cp)
+- DCNv3 컴파일 필요 (설치 복잡)
+
+### Config
+
+- [configs/mask2former/mask2former_internimage-l_40k_dacl-efflorescence-512x512.py](configs/mask2former/mask2former_internimage-l_40k_dacl-efflorescence-512x512.py)
+
+---
+
+## 12. S2DS 외부 데이터 평가 (Cross-domain Zero-shot)
+
+학습에 안 쓴 외부 데이터셋(S2DS test 93장)에서 5개 모델 평가.
+
+### S2DS 데이터셋
+
+- 출처: Benz & Rodehorst 2022, DAGM GCPR
+- 7-class (background + crack, spalling, corrosion, **efflorescence**, vegetation, control point)
+- 평가용으로 efflorescence만 binary 변환 (Cyan BGR(255,255,0) → 1)
+
+### Cross-domain 결과 (S2DS test, Efflorescence 클래스)
+
+| 모델 | Eff IoU | F1 | Precision | Recall |
+|---|---|---|---|---|
+| UPerNet + ConvNeXt-B | 53.21 | 69.46 | 53.32 | 99.61 |
+| **UPerNet + ConvNeXt-L** | **58.60** ⭐ | **73.89** ⭐ | **58.70** ⭐ | 99.70 |
+| Mask2Former + Swin-B | 46.19 | 63.19 | 46.28 | 99.59 |
+| Mask2Former + Swin-L | 40.76 | 57.91 | 40.82 | 99.62 |
+| Mask2Former + InternImage-L | 46.21 | 63.21 | 46.23 | **99.88** ⭐ |
+
+### dacl vs S2DS 변화 (도메인 일반화)
+
+| 모델 | dacl Eff IoU | S2DS Eff IoU | 변화 |
+|---|---|---|---|
+| ConvNeXt-B | 55.80 | 53.21 | -2.59 (안정) |
+| **ConvNeXt-L** | 51.51 | **58.60** | **+7.09** 🚀 |
+| Mask2Former Swin-B | 58.50 | 46.19 | -12.31 |
+| Mask2Former Swin-L | 56.77 | 40.76 | -16.01 |
+| Mask2Former InternImage-L | 55.65 | 46.21 | -9.44 |
+
+### 관찰
+
+- **ConvNeXt-L**: 유일하게 외부 도메인에서 **향상** — 일반화 능력 가장 우수
+- **Mask2Former 계열**: 도메인 shift에 취약 (dacl에 일부 과적합 가능성)
+- **모든 모델 Recall 99%+**: 백태 영역을 거의 다 잡아내지만 Precision 차이 큼
+
+### 결론
+
+| 평가 | 1위 |
+|---|---|
+| In-domain (dacl) | Mask2Former + Swin-B (mIoU 76.83) |
+| **Cross-domain (S2DS)** | **UPerNet + ConvNeXt-L (mIoU 78.76)** ⭐ |
+| **종합 (두 도메인 평균)** | **UPerNet + ConvNeXt-L** |
+
+---
+
+## 13. Combined 데이터셋 학습 (계획)
+
+베이스라인 강화를 위해 **dacl + S2DS 통합 학습** 진행 예정 (실증 데이터 파인튜닝 전 단계).
+
+### 데이터 통합
+
+```
+dacl_s2ds_combined/
+├── train/        2,021장 (dacl train 1,371 + S2DS train 563 + S2DS val 87)
+├── val/          152장 (dacl val - best checkpoint 선택용)
+├── test/         206장 (dacl test - in-domain 평가)
+└── s2ds_test/    93장 (S2DS test - cross-domain 평가, 학습 안 됨)
+```
+
+### 학습 계획
+
+- Phase 1: UPerNet + ConvNeXt-B (~3시간)
+- Phase 2: UPerNet + ConvNeXt-L (~5시간)
+- 각자 학습 후 dacl test + S2DS test 평가
+
+### Config
+
+- [configs/convnext/convnext-base_upernet_40k_combined-efflorescence-512x512.py](configs/convnext/convnext-base_upernet_40k_combined-efflorescence-512x512.py)
+- [configs/convnext/convnext-large_upernet_40k_combined-efflorescence-512x512.py](configs/convnext/convnext-large_upernet_40k_combined-efflorescence-512x512.py)
+
+### Base dataset config
+
+- [configs/_base_/datasets/combined_efflorescence.py](configs/_base_/datasets/combined_efflorescence.py)
+
+### 실행 스크립트
+
+```bash
+nohup bash tools/train_combined_convnext.sh > logs_combined_train.log 2>&1 &
+disown
+```

@@ -1,15 +1,15 @@
 _base_ = [
     '../_base_/models/upernet_convnext.py',
-    '../_base_/datasets/dacl_efflorescence.py',
+    '../_base_/datasets/combined_efflorescence.py',
     '../_base_/default_runtime.py',
     '../_base_/schedules/schedule_40k.py'
 ]
 
 crop_size = (512, 512)
 data_preprocessor = dict(size=crop_size)
-checkpoint_file = 'checkpoints/convnext-base_3rdparty_in21k_20220301-262fd037.pth'  # local
+checkpoint_file = 'checkpoints/convnext-base_3rdparty_in21k_20220301-262fd037.pth'
 
-# ConvNeXt-B + UPerNet, num_classes=2 for binary efflorescence
+# ConvNeXt-B + UPerNet, binary (num_classes=2)
 model = dict(
     data_preprocessor=data_preprocessor,
     backbone=dict(
@@ -19,13 +19,8 @@ model = dict(
         drop_path_rate=0.4,
         layer_scale_init_value=1.0,
         gap_before_final_norm=False,
-        init_cfg=dict(
-            type='Pretrained', checkpoint=checkpoint_file,
-            prefix='backbone.')),
-    decode_head=dict(
-        in_channels=[128, 256, 512, 1024],
-        num_classes=2,
-    ),
+        init_cfg=dict(type='Pretrained', checkpoint=checkpoint_file, prefix='backbone.')),
+    decode_head=dict(in_channels=[128, 256, 512, 1024], num_classes=2),
     auxiliary_head=dict(in_channels=512, num_classes=2),
     test_cfg=dict(mode='slide', crop_size=crop_size, stride=(341, 341)),
 )
@@ -33,13 +28,8 @@ model = dict(
 optim_wrapper = dict(
     _delete_=True,
     type='AmpOptimWrapper',
-    optimizer=dict(
-        type='AdamW', lr=0.0001, betas=(0.9, 0.999), weight_decay=0.05),
-    paramwise_cfg={
-        'decay_rate': 0.9,
-        'decay_type': 'stage_wise',
-        'num_layers': 12
-    },
+    optimizer=dict(type='AdamW', lr=0.0001, betas=(0.9, 0.999), weight_decay=0.05),
+    paramwise_cfg={'decay_rate': 0.9, 'decay_type': 'stage_wise', 'num_layers': 12},
     constructor='LearningRateDecayOptimizerConstructor',
     loss_scale='dynamic')
 
@@ -51,3 +41,6 @@ param_scheduler = [
 train_dataloader = dict(batch_size=2, num_workers=2)
 val_dataloader = dict(batch_size=1, num_workers=4)
 test_dataloader = val_dataloader
+
+default_hooks = dict(
+    checkpoint=dict(type='CheckpointHook', by_epoch=False, interval=4000, save_best='mIoU'))
